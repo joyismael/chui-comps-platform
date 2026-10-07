@@ -361,16 +361,18 @@ def gather(ticker: str, fmp_key: str, ua: str) -> dict:
 
 
 # ----------------------------------------------------------------------------
-# Lami pilot defaults
+# Sample portfolio-company defaults (fictional; for the public demo).
+# Real portfolio valuations are kept in the private workbook, not in this app.
+# The peer tickers are public listed companies, used for the live data pull.
 # ----------------------------------------------------------------------------
 
-LAMI_PEERS = ["GSHD", "TWFG", "AIFU", "POLICYBZR.NS"]
-LAMI_INPUTS = {
-    "company": "Lami Inc", "sector": "Insurtech, Nairobi",
+SAMPLE_PEERS = ["GSHD", "TWFG", "AIFU", "POLICYBZR.NS"]
+SAMPLE_INPUTS = {
+    "company": "ExampleCo (sample)", "sector": "Insurtech (sample)",
     "valuation_date": "2026-06-30", "currency": "USD",
-    "revenue_ltm_m": 2.853, "cash_m": 0.209, "debt_m": 0.0,
-    "ownership_pct": 6.36, "discount_pct": 15.0,
-    "instrument": "SAFE (with MFN)", "pro_rata_confirmed": False,
+    "revenue_ltm_m": 2.00, "cash_m": 0.30, "debt_m": 0.50,
+    "ownership_pct": 10.0, "discount_pct": 20.0,
+    "instrument": "SAFE (sample)", "pro_rata_confirmed": False,
 }
 
 
@@ -383,7 +385,7 @@ st.set_page_config(page_title=APP_TITLE, page_icon="chart", layout="wide")
 if "peers" not in st.session_state:
     st.session_state.peers = {}  # ticker -> record
 if "pf" not in st.session_state:
-    st.session_state.pf = dict(LAMI_INPUTS)
+    st.session_state.pf = dict(SAMPLE_INPUTS)
 
 st.sidebar.title("Chui Comps")
 st.sidebar.caption("Public comparables valuation platform")
@@ -417,9 +419,9 @@ with tab_search:
     query = c1.text_input("Company name or ticker", placeholder="e.g. Goosehead, or GSHD")
     go = c2.button("Search", use_container_width=True)
     quick = st.columns(5)
-    if quick[0].button("Load Lami peer set", use_container_width=True):
-        with st.spinner("Pulling the four Lami peers from Yahoo, EDGAR and FMP..."):
-            for t in LAMI_PEERS:
+    if quick[0].button("Load sample peer set", use_container_width=True):
+        with st.spinner("Pulling the four sample peers from Yahoo, EDGAR and FMP..."):
+            for t in SAMPLE_PEERS:
                 st.session_state.peers[t] = gather(t, fmp_key, ua)
         st.success("Loaded GSHD, TWFG, AIFU and POLICYBZR.NS into the peer set.")
 
@@ -462,7 +464,7 @@ with tab_search:
 with tab_comps:
     st.subheader("Approved peer set")
     if not st.session_state.peers:
-        st.info("No peers yet. Use the Search tab, or load the Lami peer set.")
+        st.info("No peers yet. Use the Search tab, or load the sample peer set.")
     else:
         rows = []
         for t, r in st.session_state.peers.items():
@@ -495,7 +497,7 @@ with tab_comps:
         m[1].metric("Median EV/Revenue", f"{median_eligible(elig_evrev)}x" if elig_evrev else "No usable peers")
         m[2].metric("Median P/S", f"{median_eligible(elig_ps)}x" if elig_ps else "No usable peers")
         if len(elig_evrev) < 3:
-            st.warning("Fewer than three eligible peers. Requires Augustine's approval before use.")
+            st.warning("Fewer than three eligible peers. Requires the finance reviewer's approval before use.")
         cc = st.columns(2)
         if cc[0].button("Refresh all peers"):
             with st.spinner("Refreshing..."):
@@ -523,7 +525,7 @@ with tab_val:
     c1, c2, c3 = st.columns(3)
     method = c1.selectbox("Method", ["EV/Revenue", "P/S"])
     pf["discount_pct"] = c2.number_input("Approved adjustment / discount (%)", value=float(pf["discount_pct"]), step=0.5, format="%.1f")
-    pf["pro_rata_confirmed"] = c3.checkbox("Pro-rata holding confirmed (Augustine)", value=pf["pro_rata_confirmed"])
+    pf["pro_rata_confirmed"] = c3.checkbox("Pro-rata holding confirmed (reviewer)", value=pf["pro_rata_confirmed"])
 
     elig_evrev = [r["ev_rev"] for r in st.session_state.peers.values() if r["eligible"] and r["ev_rev"] is not None]
     elig_ps = [r["ps"] for r in st.session_state.peers.values() if r["eligible"] and r["ps"] is not None]
@@ -553,7 +555,7 @@ with tab_val:
             st.caption(f"At {pf['valuation_date']}, {len(elig_evrev)} eligible core peers had a median EV/Revenue of "
                        f"{base}x. The approved {pf['discount_pct']}% adjustment gives a selected multiple of {selected}x. "
                        f"Applied to LTM revenue of {pf['revenue_ltm_m']}m, this implies EV of {implied_ev}m and equity "
-                       f"value of {equity}m. Model-implied only; becomes a mark after Augustine's review.")
+                       f"value of {equity}m. Model-implied only; becomes a mark after the finance reviewer's review.")
     else:
         base = med_ps
         if base is None:
@@ -612,7 +614,7 @@ EV/Revenue and P/S valuation for a portfolio company.
 - Market cap = price times shares. EV = market cap + debt - cash.
 - Median uses eligible core peers only. Fewer than three needs reviewer approval.
 - Missing data stays missing, never zero. Non-USD is flagged for conversion.
-- The model output is a draft; it becomes an approved mark only after Augustine reviews it.
+- The model output is a draft; it becomes an approved mark only after the finance reviewer reviews it.
 
 ### Relationship to the Comps Engine workbook
 This platform is the search-and-pull front for the 9-tab Comps Engine Google Sheet. The

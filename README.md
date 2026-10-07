@@ -30,7 +30,7 @@ It opens at http://localhost:8501.
 
 ## How to use
 1. Open the app, enter the FMP key in the sidebar (optional).
-2. Search tab: type a company name or ticker, then Pull, or click Load Lami peer set.
+2. Search tab: type a company name or ticker, then Pull, or click Load sample peer set.
 3. Peer set tab: review the comparable table, untick a peer to exclude it, read the median.
 4. Valuation tab: enter the portfolio company inputs and the approved discount; read the
    implied EV and equity value. Holding value stays blocked until pro-rata is confirmed.
